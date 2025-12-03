@@ -1,13 +1,24 @@
 import os
 import logging
 from fastapi import FastAPI, HTTPException, Header
+from fastapi.middleware.cors import CORSMiddleware  # NEW IMPORT
 from pydantic import BaseModel
-from e2b_code_interpreter import Sandbox  # UPDATED IMPORT
+from e2b_code_interpreter import Sandbox
 from dotenv import load_dotenv
 
 # INITIALIZATION
 load_dotenv()
 app = FastAPI(title="AETHER", description="The Execution Layer for AI Agents")
+
+# --- SECURITY PATCH: CORS (ALLOW BROWSER ACCESS) ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows ALL domains (GitHub Pages, Localhost, etc.)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (POST, GET, etc.)
+    allow_headers=["*"],  # Allows all headers (x-api-key, etc.)
+)
+# ---------------------------------------------------
 
 # LOGGING
 logging.basicConfig(level=logging.INFO)
@@ -24,7 +35,7 @@ class ExecutionRequest(BaseModel):
 # ENDPOINTS
 @app.get("/")
 def health_check():
-    return {"status": "ONLINE", "system": "AETHER v1.1 (Stable)", "location": "Addis Ababa Node"}
+    return {"status": "ONLINE", "system": "AETHER v1.2 (CORS PATCHED)", "location": "Addis Ababa Node"}
 
 @app.post("/v1/execute")
 def execute_code(request: ExecutionRequest, x_api_key: str = Header(None)):
@@ -38,16 +49,11 @@ def execute_code(request: ExecutionRequest, x_api_key: str = Header(None)):
     try:
         logger.info("Spawning Sandbox...")
         
-        # UPDATED LOGIC: Use 'with' context manager for auto-cleanup
-        # No arguments needed for default sandbox
         with Sandbox.create() as sandbox:
             logger.info("Sandbox Active. Running Code...")
             
-            # Execute the code
             execution = sandbox.run_code(request.code)
 
-            # Capture results
-            # Note: E2B returns a list of logs/results
             output_stdout = "\n".join(execution.logs.stdout)
             output_stderr = "\n".join(execution.logs.stderr)
 
