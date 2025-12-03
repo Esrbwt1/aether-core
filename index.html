@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AETHER | Synthetic Intelligence Layer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>body { background-color: #0a0a0a; color: #e5e5e5; font-family: 'Courier New', Courier, monospace; }</style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+    <div class="max-w-2xl w-full border border-gray-800 p-8 rounded-lg bg-black shadow-[0_0_20px_rgba(0,255,0,0.1)]">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-green-500 tracking-widest">AETHER_PROTOCOL</h1>
+            <span class="text-xs text-gray-500">STATUS: ONLINE</span>
+        </div>
+
+        <p class="text-sm text-gray-400 mb-6">
+            SECURE CLOUD EXECUTION ENVIRONMENT FOR AI AGENTS.<br>
+            <span class="text-green-900">SYSTEM: E2B SANDBOX INTEGRATED.</span>
+        </p>
+
+        <!-- CODE INPUT -->
+        <div class="mb-4">
+            <label class="block text-xs text-gray-500 mb-2">INPUT_VECTOR (PYTHON)</label>
+            <textarea id="codeInput" class="w-full h-40 bg-gray-900 border border-gray-700 p-3 text-green-400 text-sm focus:outline-none focus:border-green-500 font-mono" placeholder="print('Hello from the Aether')"></textarea>
+        </div>
+
+        <!-- API KEY INPUT -->
+        <div class="mb-6">
+            <label class="block text-xs text-gray-500 mb-2">ACCESS_TOKEN</label>
+            <input type="password" id="apiKey" class="w-full bg-gray-900 border border-gray-700 p-2 text-white text-sm focus:outline-none focus:border-green-500" placeholder="sk_...">
+        </div>
+
+        <!-- EXECUTE BUTTON -->
+        <button onclick="executeCode()" class="w-full bg-green-900 hover:bg-green-700 text-green-100 py-3 rounded border border-green-600 transition-all uppercase tracking-wider font-bold">
+            INITIATE EXECUTION SEQUENCE
+        </button>
+
+        <!-- OUTPUT -->
+        <div id="outputArea" class="mt-6 hidden">
+            <label class="block text-xs text-gray-500 mb-2">OUTPUT_STREAM</label>
+            <div id="consoleOutput" class="bg-gray-950 border border-gray-800 p-4 text-xs font-mono text-gray-300 whitespace-pre-wrap"></div>
+        </div>
+    </div>
+
+    <script>
+        async function executeCode() {
+            const code = document.getElementById('codeInput').value;
+            const key = document.getElementById('apiKey').value;
+            const btn = document.querySelector('button');
+            const outArea = document.getElementById('outputArea');
+            const consoleOut = document.getElementById('consoleOutput');
+
+            // UPDATE YOUR RENDER URL HERE AFTER DEPLOYMENT
+            const API_URL = "https://aether-api-73ow.onrender.com/v1/execute"; 
+
+            btn.innerText = "PROCESSING...";
+            btn.disabled = true;
+            consoleOut.innerText = "";
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': key
+                    },
+                    body: JSON.stringify({ code: code })
+                });
+
+                const data = await response.json();
+                outArea.classList.remove('hidden');
+
+                if (data.status === 'success') {
+                    consoleOut.innerText = `> STDOUT:\n${data.stdout}\n\n> STDERR:\n${data.stderr}`;
+                    consoleOut.classList.add('text-green-400');
+                } else {
+                    consoleOut.innerText = `ERROR: ${data.message || 'Unknown Error'}`;
+                    consoleOut.classList.add('text-red-400');
+                }
+            } catch (err) {
+                outArea.classList.remove('hidden');
+                consoleOut.innerText = `CONNECTION_FAILURE: ${err.message}`;
+                consoleOut.classList.add('text-red-500');
+            }
+
+            btn.innerText = "INITIATE EXECUTION SEQUENCE";
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>
